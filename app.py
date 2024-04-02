@@ -1,6 +1,5 @@
 from flask import Flask, render_template, request, send_file
-from pytube import YouTube
-import time
+import youtube_dl
 
 app = Flask(__name__)
 
@@ -12,21 +11,27 @@ def index():
         
         # Descargar el video o audio
         try:
-            yt = YouTube(url)
-            if tipo_descarga == "video":
-                stream = yt.streams.get_highest_resolution()
-                filename = f"{yt.title}.mp4"
-            elif tipo_descarga == "audio":
-                stream = yt.streams.filter(only_audio=True).first()
-                filename = f"{yt.title}.mp3"
-            else:
-                return render_template("index.html", mensaje="Tipo de descarga no válido")
-
-            # Descargar el archivo
-            stream.download()
-
-            # Esperar antes de enviar la respuesta
-            time.sleep(10)  # Espera 10 segundos entre cada descarga
+            ydl_opts = {
+                'outtmpl': '%(title)s.%(ext)s',  # Nombre de archivo basado en el título del video
+            }
+            with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(url, download=False)
+                if tipo_descarga == "video":
+                    # Descargar el video
+                    ydl.download([url])
+                    filename = f"{info['title']}.mp4"
+                elif tipo_descarga == "audio":
+                    # Descargar el audio
+                    ydl_opts['format'] = 'bestaudio/best'
+                    ydl_opts['postprocessors'] = [{
+                        'key': 'FFmpegExtractAudio',
+                        'preferredcodec': 'mp3',
+                        'preferredquality': '192',
+                    }]
+                    ydl.download([url])
+                    filename = f"{info['title']}.mp3"
+                else:
+                    return render_template("index.html", mensaje="Tipo de descarga no válido")
 
             # Proporcionar enlace de descarga
             return render_template("descarga.html", filename=filename)
