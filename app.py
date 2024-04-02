@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, send_file
 from pytube import YouTube
+import time
 
 app = Flask(__name__)
 
@@ -23,7 +24,10 @@ def index():
 
             # Descargar el archivo
             stream.download()
-            
+
+            # Esperar antes de enviar la respuesta
+            time.sleep(10)  # Espera 10 segundos entre cada descarga
+
             # Proporcionar enlace de descarga
             return render_template("descarga.html", filename=filename)
         
