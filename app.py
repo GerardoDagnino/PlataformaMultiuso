@@ -27,7 +27,7 @@ def descargar_video(url, ruta_descarga):
         yt = YouTube(url)
         video = yt.streams.get_highest_resolution()
         video.download(output_path=ruta_descarga)
-        time.sleep(5)  # Espera 5 segundos entre cada descarga
+        time.sleep(30)  # Espera 5 segundos entre cada descarga
         return True, yt.title
     except Exception as e:
         return False, str(e)
@@ -37,7 +37,7 @@ def descargar_audio(url, ruta_descarga):
         yt = YouTube(url)
         audio = yt.streams.filter(only_audio=True).first()
         audio.download(output_path=ruta_descarga)
-        time.sleep(5)  # Espera 5 segundos entre cada descarga
+        time.sleep(30)  # Espera 5 segundos entre cada descarga
         return True, yt.title
     except Exception as e:
         return False, str(e)
