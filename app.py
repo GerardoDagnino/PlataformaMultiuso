@@ -2,6 +2,7 @@ import os
 from flask import Flask, render_template, request
 from pytube import YouTube
 import time
+import math
 
 app = Flask(__name__)
 
@@ -27,20 +28,28 @@ def descargar_video(url, ruta_descarga):
         yt = YouTube(url)
         video = yt.streams.get_highest_resolution()
         video.download(output_path=ruta_descarga)
-        time.sleep(30)  # Espera 5 segundos entre cada descarga
         return True, yt.title
     except Exception as e:
-        return False, str(e)
+        if "429" in str(e):  # Si se encuentra el error 429
+            # Espera exponencialmente más tiempo antes de volver a intentarlo
+            time.sleep(math.pow(2, 5))  # Espera 2^5 = 32 segundos
+            return descargar_video(url, ruta_descarga)  # Intenta descargar de nuevo
+        else:
+            return False, str(e)
 
 def descargar_audio(url, ruta_descarga):
     try:
         yt = YouTube(url)
         audio = yt.streams.filter(only_audio=True).first()
         audio.download(output_path=ruta_descarga)
-        time.sleep(30)  # Espera 5 segundos entre cada descarga
         return True, yt.title
     except Exception as e:
-        return False, str(e)
+        if "429" in str(e):  # Si se encuentra el error 429
+            # Espera exponencialmente más tiempo antes de volver a intentarlo
+            time.sleep(math.pow(2, 5))  # Espera 2^5 = 32 segundos
+            return descargar_audio(url, ruta_descarga)  # Intenta descargar de nuevo
+        else:
+            return False, str(e)
 
 @app.route("/", methods=["GET", "POST"])
 def index():
