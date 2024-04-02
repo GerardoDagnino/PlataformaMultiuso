@@ -26,7 +26,7 @@ def index():
     if request.method == "POST":
         url = request.form["url"]
         tipo_descarga = request.form["tipo_descarga"]
-        ruta_descarga = "downloads/"
+        ruta_descarga = request.form["ruta_descarga"]  # Obtener la ruta de descarga del formulario
         if tipo_descarga == "video":
             success, mensaje = descargar_video(url, ruta_descarga)
         elif tipo_descarga == "audio":
