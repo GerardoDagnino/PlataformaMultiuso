@@ -1,49 +1,24 @@
-from flask import Flask, render_template, request, send_file
+from flask import Flask, render_template, request, jsonify
 import youtube_dl
 
 app = Flask(__name__)
 
-@app.route("/", methods=["GET", "POST"])
+@app.route('/')
 def index():
-    if request.method == "POST":
-        url = request.form["url"]
-        tipo_descarga = request.form["tipo_descarga"]
-        
-        # Descargar el video o audio
-        try:
-            ydl_opts = {
-                'outtmpl': '%(title)s.%(ext)s',  # Nombre de archivo basado en el título del video
-            }
-            with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-                info = ydl.extract_info(url, download=False)
-                if tipo_descarga == "video":
-                    # Descargar el video
-                    ydl.download([url])
-                    filename = f"{info['title']}.mp4"
-                elif tipo_descarga == "audio":
-                    # Descargar el audio
-                    ydl_opts['format'] = 'bestaudio/best'
-                    ydl_opts['postprocessors'] = [{
-                        'key': 'FFmpegExtractAudio',
-                        'preferredcodec': 'mp3',
-                        'preferredquality': '192',
-                    }]
-                    ydl.download([url])
-                    filename = f"{info['title']}.mp3"
-                else:
-                    return render_template("index.html", mensaje="Tipo de descarga no válido")
+    return render_template('index.html')
 
-            # Proporcionar enlace de descarga
-            return render_template("descarga.html", filename=filename)
-        
-        except Exception as e:
-            return render_template("index.html", mensaje=f"Error: {e}")
-    
-    return render_template("index.html")
+@app.route('/descargar_video', methods=['POST'])
+def descargar_video():
+    url = request.form['url']
+    try:
+        ydl_opts = {
+            'verbose': True  # Agregar el flag --verbose
+        }
+        with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+            info_dict = ydl.extract_info(url, download=True)
+        return jsonify({'mensaje': '¡Video descargado correctamente!'})
+    except Exception as e:
+        return jsonify({'error': str(e)})
 
-@app.route("/descargar/<filename>")
-def descargar_archivo(filename):
-    return send_file(filename, as_attachment=True)
-
-if __name__ == "__main__":
-    app.run(host='0.0.0.0', port=8080)
+if __name__ == '__main__':
+    app.run(debug=True)
